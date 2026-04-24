@@ -74,10 +74,6 @@ contract SplitPay {
         token = IERC20(tokenAddress);
     }
 
-    /**
-     * @notice Create a new split. Anyone can create one — the creator is the
-     *         payee that all participant funds will flow to.
-     */
     function createSplit(
         uint128 totalAmount,
         uint32 participantCount,
@@ -101,12 +97,6 @@ contract SplitPay {
         emit SplitCreated(splitId, msg.sender, totalAmount, participantCount, splitType, title);
     }
 
-    /**
-     * @notice Pay your share of a split. For equal splits, `amount` should
-     *         match `getShareAmount(splitId, msg.sender)` (the contract will
-     *         enforce it). For custom splits, the caller may pay any amount
-     *         up to the remaining balance.
-     */
     function payShare(uint256 splitId, uint256 amount) external {
         Split storage s = _splits[splitId];
         if (!s.exists) revert SplitDoesNotExist();
@@ -142,19 +132,12 @@ contract SplitPay {
     }
 
     function _equalShareFor(Split storage s, address /*payer*/) internal view returns (uint256) {
-        // Equal split: total / count, with the last payer covering rounding remainder.
         uint256 base = uint256(s.totalAmount) / s.participantCount;
         bool isLast = (s.paidCount + 1 == s.participantCount);
         if (!isLast) return base;
-        // last payer covers the remaining balance
         return uint256(s.totalAmount) - uint256(s.paidAmount);
     }
 
-    /**
-     * @notice The expected amount the next equal-split payer owes. For custom
-     *         splits, returns the remaining balance (anything up to that value
-     *         is acceptable).
-     */
     function getShareAmount(uint256 splitId, address /*payer*/) external view returns (uint256) {
         Split storage s = _splits[splitId];
         if (!s.exists) revert SplitDoesNotExist();

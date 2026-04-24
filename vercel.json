@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "pnpm install --frozen-lockfile=false",
+  "buildCommand": "pnpm --filter @workspace/api-spec run codegen && BASE_PATH=/ pnpm --filter @workspace/splitpay run build",
+  "outputDirectory": "artifacts/splitpay/dist/public",
+  "framework": null,
+  "functions": {
+    "api/index.ts": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  },
+  "rewrites": [
+    { "source": "/api", "destination": "/api/index" },
+    { "source": "/api/(.*)", "destination": "/api/index" }
+  ]
+}
