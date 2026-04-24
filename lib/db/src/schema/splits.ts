@@ -5,6 +5,7 @@ import {
   timestamp,
   jsonb,
   uniqueIndex,
+  index,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
@@ -52,6 +53,21 @@ export const paymentsTable = pgTable(
   }),
 );
 
+export const participantTokensTable = pgTable(
+  "participant_tokens",
+  {
+    token: text("token").primaryKey(),
+    splitId: text("split_id")
+      .notNull()
+      .references(() => splitsTable.id, { onDelete: "cascade" }),
+    participantIndex: integer("participant_index").notNull(),
+    participantAmount: text("participant_amount").notNull(),
+  },
+  (t) => ({
+    splitIdx: index("participant_tokens_split_id_idx").on(t.splitId),
+  }),
+);
+
 export const insertSplitSchema = createInsertSchema(splitsTable);
 export type InsertSplit = z.infer<typeof insertSplitSchema>;
 export type Split = typeof splitsTable.$inferSelect;
@@ -59,3 +75,5 @@ export type Split = typeof splitsTable.$inferSelect;
 export const insertPaymentSchema = createInsertSchema(paymentsTable);
 export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 export type Payment = typeof paymentsTable.$inferSelect;
+
+export type ParticipantToken = typeof participantTokensTable.$inferSelect;

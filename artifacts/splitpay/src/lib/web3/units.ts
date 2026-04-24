@@ -2,13 +2,20 @@ import { formatUnits, parseUnits } from "viem";
 
 export const USDC_DECIMALS = 6;
 
-export function formatUsdc(microAmount: bigint | string | number): string {
-  const v = typeof microAmount === "bigint" ? microAmount : BigInt(microAmount ?? 0);
-  return formatUnits(v, USDC_DECIMALS);
+export function formatUsdc(microAmount: bigint | string | number | undefined | null): string {
+  try {
+    if (microAmount === undefined || microAmount === null) return "0.000000";
+    if (typeof microAmount === "bigint") return formatUnits(microAmount, USDC_DECIMALS);
+    const n = Number(microAmount);
+    if (!Number.isFinite(n) || n < 0) return "0.000000";
+    return formatUnits(BigInt(Math.floor(n)), USDC_DECIMALS);
+  } catch {
+    return "0.000000";
+  }
 }
 
 export function formatUsdcDisplay(
-  microAmount: bigint | string | number,
+  microAmount: bigint | string | number | undefined | null,
   opts?: { withSymbol?: boolean },
 ): string {
   const v = formatUsdc(microAmount);
@@ -18,7 +25,7 @@ export function formatUsdcDisplay(
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })
-    : v;
+    : "0.00";
   return opts?.withSymbol === false ? formatted : `${formatted} USDC`;
 }
 

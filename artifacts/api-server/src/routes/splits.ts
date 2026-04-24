@@ -3,6 +3,7 @@ import { db } from "@workspace/db";
 import {
   splitsTable,
   paymentsTable,
+  participantTokensTable,
   type Split as SplitRow,
   type Payment as PaymentRow,
 } from "@workspace/db";
@@ -25,6 +26,15 @@ function nanoId(size = 10): string {
   return id;
 }
 
+function generateParticipantToken(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
+  let token = "";
+  for (let i = 0; i < 20; i++) {
+    token += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return token;
+}
+
 type SplitDto = {
   id: string;
   title?: string;
@@ -37,6 +47,7 @@ type SplitDto = {
   txHash: string;
   paidCount: number;
   createdAt: string;
+  participantTokens?: string[];
 };
 
 type PaymentDto = {
@@ -46,6 +57,18 @@ type PaymentDto = {
   amount: string;
   txHash: string;
   paidAt: string;
+};
+
+type ParticipantViewDto = {
+  splitId: string;
+  title?: string;
+  totalAmount: string;
+  participantCount: number;
+  splitType: "equal" | "custom";
+  onChainId: string;
+  txHash: string;
+  participantIndex: number;
+  participantAmount: string;
 };
 
 function toPaymentDto(row: PaymentRow): PaymentDto {
@@ -59,7 +82,7 @@ function toPaymentDto(row: PaymentRow): PaymentDto {
   };
 }
 
-function toSplitDto(row: SplitRow, paidCount: number): SplitDto {
+function toSplitDto(row: SplitRow, paidCount: number, tokens?: string[]): SplitDto {
   return {
     id: row.id,
     title: row.title ?? undefined,
@@ -72,6 +95,7 @@ function toSplitDto(row: SplitRow, paidCount: number): SplitDto {
     txHash: row.txHash,
     paidCount,
     createdAt: row.createdAt.toISOString(),
+    ...(tokens ? { participantTokens: tokens } : {}),
   };
 }
 
@@ -136,7 +160,31 @@ router.post("/splits", async (req, res) => {
     })
     .returning();
 
-  res.status(201).json(toSplitDto(inserted!, 0));
+  const split = inserted!;
+
+  const perPerson =
+    split.splitType === "equal"
+      ? (BigInt(split.totalAmount) / BigInt(split.participantCount)).toString()
+      : null;
+
+  const tokens: string[] = [];
+  for (let i = 0; i < split.participantCount; i++) {
+    const token = generateParticipantToken();
+    const amount =
+      split.splitType === "custom" && split.customAmounts
+        ? (split.customAmounts[i] ?? perPerson ?? "0")
+        : perPerson ?? "0";
+
+    await db.insert(participantTokensTable).values({
+      token,
+      splitId: split.id,
+      participantIndex: i,
+      participantAmount: amount,
+    });
+    tokens.push(token);
+  }
+
+  res.status(201).json(toSplitDto(split, 0, tokens));
 });
 
 router.get("/splits/by-creator/:address", async (req, res) => {
@@ -163,6 +211,42 @@ router.get("/splits/by-creator/:address", async (req, res) => {
   res.json(rows.map((s) => toSplitDto(s, countMap.get(s.id) ?? 0)));
 });
 
+router.get("/splits/by-token/:token", async (req, res) => {
+  const token = req.params.token;
+
+  const [tokenRow] = await db
+    .select()
+    .from(participantTokensTable)
+    .where(eq(participantTokensTable.token, token));
+
+  if (!tokenRow) {
+    return res.status(404).json({ message: "Token not found" });
+  }
+
+  const [split] = await db
+    .select()
+    .from(splitsTable)
+    .where(eq(splitsTable.id, tokenRow.splitId));
+
+  if (!split) {
+    return res.status(404).json({ message: "Split not found" });
+  }
+
+  const view: ParticipantViewDto = {
+    splitId: split.id,
+    title: split.title ?? undefined,
+    totalAmount: split.totalAmount,
+    participantCount: split.participantCount,
+    splitType: split.splitType,
+    onChainId: split.onChainId,
+    txHash: split.txHash,
+    participantIndex: tokenRow.participantIndex,
+    participantAmount: tokenRow.participantAmount,
+  };
+
+  res.json(view);
+});
+
 router.get("/splits/:id", async (req, res) => {
   const [row] = await db
     .select()
@@ -177,8 +261,16 @@ router.get("/splits/:id", async (req, res) => {
     .where(eq(paymentsTable.splitId, row.id))
     .orderBy(desc(paymentsTable.paidAt));
 
+  const tokenRows = await db
+    .select()
+    .from(participantTokensTable)
+    .where(eq(participantTokensTable.splitId, row.id))
+    .orderBy(participantTokensTable.participantIndex);
+
+  const tokens = tokenRows.length ? tokenRows.map((t) => t.token) : undefined;
+
   res.json({
-    ...toSplitDto(row, payments.length),
+    ...toSplitDto(row, payments.length, tokens),
     payments: payments.map(toPaymentDto),
   });
 });
@@ -222,11 +314,11 @@ router.post("/splits/:id/payments", async (req, res) => {
     return res.status(201).json(toPaymentDto(existing));
   }
 
-  const id = nanoId(12);
-  const [inserted] = await db
+  const pmtId = nanoId(12);
+  const [pmtInserted] = await db
     .insert(paymentsTable)
     .values({
-      id,
+      id: pmtId,
       splitId: split.id,
       payerAddress,
       amount: body.amount,
@@ -234,7 +326,7 @@ router.post("/splits/:id/payments", async (req, res) => {
     })
     .returning();
 
-  res.status(201).json(toPaymentDto(inserted!));
+  res.status(201).json(toPaymentDto(pmtInserted!));
 });
 
 export default router;

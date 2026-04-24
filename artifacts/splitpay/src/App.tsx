@@ -10,6 +10,7 @@ import Home from "@/pages/Home";
 import CreateSplit from "@/pages/CreateSplit";
 import SplitDetail from "@/pages/SplitDetail";
 import MySplits from "@/pages/MySplits";
+import ParticipantPay from "@/pages/ParticipantPay";
 
 const queryClient = new QueryClient();
 
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/create" component={CreateSplit} />
       <Route path="/split/:id" component={SplitDetail} />
+      <Route path="/pay/:token" component={ParticipantPay} />
       <Route path="/me" component={MySplits} />
       <Route component={NotFound} />
     </Switch>
