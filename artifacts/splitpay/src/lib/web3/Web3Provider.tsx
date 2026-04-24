@@ -6,7 +6,6 @@ import {
   darkTheme,
 } from "@rainbow-me/rainbowkit";
 import {
-  metaMaskWallet,
   injectedWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 import { useGetConfig } from "@workspace/api-client-react";
@@ -34,7 +33,7 @@ export function Web3Provider({ children }: Props) {
       [
         {
           groupName: "Recommended",
-          wallets: [metaMaskWallet, injectedWallet],
+          wallets: [injectedWallet],
         },
       ],
       {
