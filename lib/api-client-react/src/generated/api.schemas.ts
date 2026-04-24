@@ -82,12 +82,26 @@ export interface Stats {
   activeSplits: number;
 }
 
+/**
+ * Chain configuration for the dApp. Defaults are sourced from the official
+Arc App Kit chain definitions (`@circle-fin/app-kit/chains`).
+
+ */
 export interface AppConfig {
   chainId: number;
   chainName: string;
   rpcUrl: string;
+  /** Base explorer URL (no trailing slash, no path template) */
   explorerUrl: string;
+  /** Arc system USDC ERC-20 address */
   usdcAddress: string;
+  /** Decimals of the USDC ERC-20 (6) */
+  usdcDecimals: number;
+  nativeCurrencyName: string;
+  nativeCurrencySymbol: string;
+  /** Decimals of the native gas token (18 on Arc) */
+  nativeCurrencyDecimals: number;
+  isTestnet: boolean;
   splitPayAddress: string;
 }
 

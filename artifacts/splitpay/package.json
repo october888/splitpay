@@ -76,5 +76,8 @@
     "wagmi": "^3.6.4",
     "wouter": "^3.3.5",
     "zod": "catalog:"
+  },
+  "dependencies": {
+    "@circle-fin/app-kit": "^1.4.1"
   }
 }

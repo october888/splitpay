@@ -175,11 +175,24 @@ export const GetStatsResponse = zod.object({
 /**
  * @summary Public chain configuration for the dApp
  */
-export const GetConfigResponse = zod.object({
-  chainId: zod.number(),
-  chainName: zod.string(),
-  rpcUrl: zod.string(),
-  explorerUrl: zod.string(),
-  usdcAddress: zod.string(),
-  splitPayAddress: zod.string(),
-});
+export const GetConfigResponse = zod
+  .object({
+    chainId: zod.number(),
+    chainName: zod.string(),
+    rpcUrl: zod.string(),
+    explorerUrl: zod
+      .string()
+      .describe("Base explorer URL (no trailing slash, no path template)"),
+    usdcAddress: zod.string().describe("Arc system USDC ERC-20 address"),
+    usdcDecimals: zod.number().describe("Decimals of the USDC ERC-20 (6)"),
+    nativeCurrencyName: zod.string(),
+    nativeCurrencySymbol: zod.string(),
+    nativeCurrencyDecimals: zod
+      .number()
+      .describe("Decimals of the native gas token (18 on Arc)"),
+    isTestnet: zod.boolean(),
+    splitPayAddress: zod.string(),
+  })
+  .describe(
+    "Chain configuration for the dApp. Defaults are sourced from the official\nArc App Kit chain definitions (`@circle-fin\/app-kit\/chains`).\n",
+  );

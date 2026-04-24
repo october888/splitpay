@@ -338,6 +338,9 @@ components:
 
     AppConfig:
       type: object
+      description: |
+        Chain configuration for the dApp. Defaults are sourced from the official
+        Arc App Kit chain definitions (`@circle-fin/app-kit/chains`).
       properties:
         chainId:
           type: integer
@@ -347,8 +350,22 @@ components:
           type: string
         explorerUrl:
           type: string
+          description: Base explorer URL (no trailing slash, no path template)
         usdcAddress:
           type: string
+          description: Arc system USDC ERC-20 address
+        usdcDecimals:
+          type: integer
+          description: Decimals of the USDC ERC-20 (6)
+        nativeCurrencyName:
+          type: string
+        nativeCurrencySymbol:
+          type: string
+        nativeCurrencyDecimals:
+          type: integer
+          description: Decimals of the native gas token (18 on Arc)
+        isTestnet:
+          type: boolean
         splitPayAddress:
           type: string
       required:
@@ -357,4 +374,9 @@ components:
         - rpcUrl
         - explorerUrl
         - usdcAddress
+        - usdcDecimals
+        - nativeCurrencyName
+        - nativeCurrencySymbol
+        - nativeCurrencyDecimals
+        - isTestnet
         - splitPayAddress

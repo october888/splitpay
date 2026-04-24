@@ -23,6 +23,22 @@ configured to deploy on **Vercel** with the contract running on **Arc Testnet**
 - **API contract**: `lib/api-spec/openapi.yaml`. Run
   `pnpm --filter @workspace/api-spec run codegen` after any change.
 
+### Arc App Kit as the source of truth
+
+Chain configuration (chain id, RPC, USDC system address, native gas-token
+decimals, explorer URL) is sourced from the official Circle **Arc App Kit**
+(`@circle-fin/app-kit/chains`) instead of hand-rolled constants. See
+[App Kit docs](https://docs.arc.network/app-kit).
+
+- `artifacts/api-server/src/lib/config.ts` reads defaults from `ArcTestnet`
+  and exposes them on `GET /api/config`. Env vars override individual fields
+  (e.g. `ARC_RPC_URL`, `SPLITPAY_CONTRACT_ADDRESS`).
+- `artifacts/splitpay/src/lib/web3/chain.ts` builds a viem `Chain` from the
+  API config and re-exports `ArcTestnet` for any module that needs the
+  canonical kit contract addresses (CCTP, gateway, bridge).
+- USDC is the native gas token (18 decimals on the chain) and a standard
+  ERC-20 with **6 decimals** at `0x36...000`. SplitPay charges in microUSDC.
+
 ## Deployment
 
 The full step-by-step guide lives in [`DEPLOY.md`](./DEPLOY.md). Short version:

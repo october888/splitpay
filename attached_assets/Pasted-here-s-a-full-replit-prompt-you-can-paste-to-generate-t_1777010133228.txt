@@ -1,0 +1,84 @@
+here’s a **full replit prompt** you can paste to generate the entire dapp cleanly 👇
+
+---
+
+build a full stack web3 dapp called splitpay that allows users to split a bill and collect payments from multiple people using a single link
+
+the app should be built using nextjs wagmi rainbowkit and solidity smart contracts deployed on arc network using usdc as the payment token
+
+core idea
+one user creates a split by entering total amount and number of people or custom amounts then generates a shareable link other users open the link connect wallet and pay their share instantly
+
+frontend requirements
+
+create a modern clean landing page with a simple headline split bills instantly with one link
+
+create a create split page where user can
+enter total amount
+choose equal split or custom split
+enter number of people
+generate split
+
+after creation generate a unique link like /split/id
+
+create a split page that shows
+total amount
+amount per person
+list of participants with paid or pending status
+a big pay your share button
+
+add a progress bar showing how many people have paid
+
+after payment update UI in real time
+
+wallet integration
+use wagmi and rainbowkit for wallet connection
+show connect wallet button
+detect connected address
+
+smart contract requirements
+
+write a solidity contract with
+
+a struct split containing
+total amount
+amount per user
+total participants
+paid count
+mapping of address to bool paid
+
+functions
+
+createSplit which stores split data
+
+payShare which allows user to pay their share using usdc and marks them as paid
+
+getSplitDetails to fetch split info
+
+use erc20 interface for usdc transfers
+
+prevent double payments
+
+track paid and pending users
+
+tech stack
+
+nextjs app router
+wagmi rainbowkit
+viem or ethers
+solidity foundry or hardhat
+deploy on arc network
+
+extra features
+
+auto calculate equal split
+allow custom split amounts
+show paid and pending users
+clean ui with minimal design
+mobile responsive
+
+goal
+
+the final app should allow a user to create a split share a link and collect payments instantly from multiple users with a smooth and simple user experience
+
+make the code modular clean and production ready
