@@ -2,17 +2,25 @@ import { useMemo, type ReactNode } from "react";
 import { WagmiProvider, createConfig, http } from "wagmi";
 import {
   RainbowKitProvider,
-  getDefaultWallets,
+  connectorsForWallets,
   darkTheme,
 } from "@rainbow-me/rainbowkit";
+import {
+  metaMaskWallet,
+  injectedWallet,
+} from "@rainbow-me/rainbowkit/wallets";
 import { useGetConfig } from "@workspace/api-client-react";
 import { buildArcChain } from "./chain";
 import { AppConfigContext } from "./useAppConfig";
+import { NetworkGuard } from "./NetworkGuard";
 import "@rainbow-me/rainbowkit/styles.css";
 
-const WALLETCONNECT_PROJECT_ID =
-  (import.meta.env.VITE_WALLETCONNECT_PROJECT_ID as string | undefined) ??
-  "splitpay-dev";
+// We intentionally only ship MetaMask + generic injected wallets so the dApp
+// does not require a WalletConnect Cloud project id.  RainbowKit's
+// `connectorsForWallets` accepts a fake `projectId` in this configuration
+// because no WalletConnect-based wallet is registered, but the field is still
+// required by the typings.
+const FAKE_WALLETCONNECT_PROJECT_ID = "splitpay-no-walletconnect";
 
 type Props = { children: ReactNode };
 
@@ -22,10 +30,18 @@ export function Web3Provider({ children }: Props) {
   const wagmiConfig = useMemo(() => {
     if (!cfg) return null;
     const chain = buildArcChain(cfg);
-    const { connectors } = getDefaultWallets({
-      appName: "SplitPay",
-      projectId: WALLETCONNECT_PROJECT_ID,
-    });
+    const connectors = connectorsForWallets(
+      [
+        {
+          groupName: "Recommended",
+          wallets: [metaMaskWallet, injectedWallet],
+        },
+      ],
+      {
+        appName: "SplitPay",
+        projectId: FAKE_WALLETCONNECT_PROJECT_ID,
+      },
+    );
     return createConfig({
       chains: [chain],
       connectors,
@@ -56,6 +72,7 @@ export function Web3Provider({ children }: Props) {
             borderRadius: "medium",
           })}
         >
+          <NetworkGuard />
           {children}
         </RainbowKitProvider>
       </WagmiProvider>
