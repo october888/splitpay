@@ -51,7 +51,24 @@ shared env var; the deployer key lives in the `DEPLOYER_PRIVATE_KEY` Replit
 secret. To redeploy, run
 `USDC_ADDRESS=0x36...000 pnpm --dir contracts/hardhat run deploy:arc-testnet`.
 
-## Deployment
+## Running on Replit
+
+The repo runs as a single workflow (`Start application`) that boots both
+servers in parallel via the root `dev` script:
+
+- **API server** on `localhost:3001` (Express, `artifacts/api-server`)
+- **Frontend** on port `5000` (Vite, `artifacts/splitpay`) — Vite proxies
+  `/api/*` to the API server, so the browser only ever talks to port 5000.
+
+`DATABASE_URL` is provided by Replit's built-in PostgreSQL. `BASE_PATH`
+defaults to `/` and `API_PROXY_TARGET` defaults to `http://localhost:3001`
+in the Vite config; both can be overridden via env vars.
+
+To re-push the Drizzle schema after editing `lib/db/src/schema/`, run
+`pnpm --filter @workspace/db run push`. After editing `lib/api-spec/openapi.yaml`,
+run `pnpm --filter @workspace/api-spec run codegen`.
+
+## Deployment (Vercel)
 
 The full step-by-step guide lives in [`DEPLOY.md`](./DEPLOY.md). Short version:
 
