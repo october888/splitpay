@@ -126,7 +126,7 @@ for **Production** (and Preview, if you want):
 | `ARC_RPC_URL` | `https://rpc.testnet.arc.network` | Or an Alchemy/dRPC URL |
 | `ARC_EXPLORER_URL` | `https://testnet.arcscan.app` | |
 | `USDC_ADDRESS` | `0x3600000000000000000000000000000000000000` | Arc system USDC |
-| `SPLITPAY_CONTRACT_ADDRESS` | `0x...` | From step 2 |
+| `SPLITPAY_CONTRACT_ADDRESS` | `0x575f1AA76CAdC580723Ba98e6B79BA5463aA7886` | Latest deploy on Arc Testnet (step 2 if redeploying) |
 | `VITE_WALLETCONNECT_PROJECT_ID` | `<project-id>` | Optional, for mobile wallets |
 | `NODE_ENV` | `production` | |
 

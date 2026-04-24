@@ -7,7 +7,7 @@
     "compile": "hardhat compile",
     "deploy:arc-testnet": "hardhat run scripts/deploy.ts --network arcTestnet",
     "deploy:arc-mainnet": "hardhat run scripts/deploy.ts --network arcMainnet",
-    "verify:sourcify": "hardhat sourcify",
+    "verify:sourcify": "hardhat verify",
     "console:arc-testnet": "hardhat console --network arcTestnet",
     "test": "hardhat test"
   },

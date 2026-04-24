@@ -42,9 +42,10 @@ decimals, explorer URL) is sourced from the official Circle **Arc App Kit**
 ### Deployed contract
 
 - **Network**: Arc Testnet (chain id `5042002`)
-- **SplitPay address**: `0x6FF4eE58AdF20E8242Af657c871d1eD185E38277`
+- **SplitPay address**: `0x575f1AA76CAdC580723Ba98e6B79BA5463aA7886`
 - **Deployer**: `0xA133F5d357602f485835229C2bB8ECF536575c33`
-- **Explorer**: https://testnet.arcscan.app/address/0x6FF4eE58AdF20E8242Af657c871d1eD185E38277
+- **Explorer**: https://testnet.arcscan.app/address/0x575f1AA76CAdC580723Ba98e6B79BA5463aA7886
+- **Sourcify**: https://repo.sourcify.dev/contracts/full_match/5042002/0x575f1AA76CAdC580723Ba98e6B79BA5463aA7886/
 
 The contract address is wired into the app via the `SPLITPAY_CONTRACT_ADDRESS`
 shared env var; the deployer key lives in the `DEPLOYER_PRIVATE_KEY` Replit
