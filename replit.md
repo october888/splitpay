@@ -1,27 +1,41 @@
-# Workspace
+# SplitPay
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+SplitPay is a web3 dApp for splitting bills with USDC on Arc Network. Create a split, share a link, friends pay their share on-chain.
+
+## Architecture
+
+- **Frontend** (`artifacts/splitpay`): React + Vite + wagmi + RainbowKit + viem. Dark-themed fintech UI with framer-motion. Pages: `/` (landing), `/create`, `/split/:id`, `/me`, 404. All web3 helpers live in `src/lib/web3/`.
+- **Backend** (`artifacts/api-server`): Express 5 + Drizzle, used purely as a metadata indexer for share links and stats. Routes in `src/routes/{splits,stats,health}.ts`.
+- **Smart contract** (`contracts/SplitPay.sol`): Standalone Solidity contract, ERC20-driven. Deployable with Foundry or Hardhat — see `contracts/README.md`.
+- **Database**: PostgreSQL via Drizzle. Schema in `lib/db/src/schema/splits.ts` (`splits`, `payments` tables).
+- **API contract**: `lib/api-spec/openapi.yaml`. Run `pnpm --filter @workspace/api-spec run codegen` after changes.
+
+## Required environment for production
+
+The frontend reads chain configuration through `GET /api/config`, which is populated from these server env vars (defaults used for local dev):
+
+- `ARC_CHAIN_ID` (default `512`)
+- `ARC_CHAIN_NAME` (default `"Arc Network"`)
+- `ARC_RPC_URL` (default `https://rpc.arc.network`)
+- `ARC_EXPLORER_URL` (default `https://explorer.arc.network`)
+- `USDC_ADDRESS` — USDC ERC20 token address on Arc
+- `SPLITPAY_CONTRACT_ADDRESS` — the deployed `SplitPay` contract
+
+Optional frontend env:
+
+- `VITE_WALLETCONNECT_PROJECT_ID` — project id from WalletConnect Cloud (for mobile wallet connections)
 
 ## Stack
 
-- **Monorepo tool**: pnpm workspaces
-- **Node.js version**: 24
-- **Package manager**: pnpm
-- **TypeScript version**: 5.9
-- **API framework**: Express 5
-- **Database**: PostgreSQL + Drizzle ORM
-- **Validation**: Zod (`zod/v4`), `drizzle-zod`
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
+- React 19, Vite, Tailwind, shadcn/ui, framer-motion, lucide-react
+- wagmi v3, viem, RainbowKit v2
+- Express 5, Drizzle ORM, PostgreSQL
+- Orval for OpenAPI codegen, Zod (`zod/v4`)
 
-## Key Commands
+## Key commands
 
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- `pnpm --filter @workspace/api-server run dev` — run API server locally
-
-See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+- `pnpm run typecheck` — full typecheck
+- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks/zod
+- `pnpm --filter @workspace/db run push` — push DB schema (dev)

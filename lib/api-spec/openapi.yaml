@@ -3,20 +3,25 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: SplitPay API — share-link metadata and indexer for on-chain bill splits
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: splits
+    description: Bill split management
+  - name: payments
+    description: Payment tracking
+  - name: stats
+    description: Aggregated stats
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +29,163 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /splits:
+    get:
+      operationId: listRecentSplits
+      tags: [splits]
+      summary: List the most recent splits
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 12
+      responses:
+        "200":
+          description: A list of recent splits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Split"
+    post:
+      operationId: createSplit
+      tags: [splits]
+      summary: Create a new split entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSplitRequest"
+      responses:
+        "201":
+          description: Split created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Split"
+
+  /splits/{id}:
+    get:
+      operationId: getSplit
+      tags: [splits]
+      summary: Get a split by share id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Split detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SplitDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /splits/{id}/payments:
+    get:
+      operationId: listPayments
+      tags: [payments]
+      summary: List payments for a split
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Payment"
+    post:
+      operationId: recordPayment
+      tags: [payments]
+      summary: Record a confirmed on-chain payment
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RecordPaymentRequest"
+      responses:
+        "201":
+          description: Payment recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+
+  /splits/by-creator/{address}:
+    get:
+      operationId: listSplitsByCreator
+      tags: [splits]
+      summary: List splits created by a wallet address
+      parameters:
+        - in: path
+          name: address
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Splits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Split"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [stats]
+      summary: Aggregate stats across all splits
+      responses:
+        "200":
+          description: Stats snapshot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Stats"
+
+  /config:
+    get:
+      operationId: getConfig
+      tags: [stats]
+      summary: Public chain configuration for the dApp
+      responses:
+        "200":
+          description: Config
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppConfig"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +193,168 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    SplitType:
+      type: string
+      enum: [equal, custom]
+
+    CreateSplitRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 120
+        creatorAddress:
+          type: string
+          description: 0x address of the creator
+        onChainId:
+          type: string
+          description: Numeric split id from the on-chain contract (stringified bigint)
+        totalAmount:
+          type: string
+          description: Total amount in 6-decimal USDC base units (microUSDC) as string
+        participantCount:
+          type: integer
+          minimum: 1
+          maximum: 100
+        splitType:
+          $ref: "#/components/schemas/SplitType"
+        customAmounts:
+          type: array
+          description: Per-participant amounts (microUSDC) for custom splits
+          items:
+            type: string
+        txHash:
+          type: string
+      required:
+        - creatorAddress
+        - onChainId
+        - totalAmount
+        - participantCount
+        - splitType
+        - txHash
+
+    Split:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        creatorAddress:
+          type: string
+        onChainId:
+          type: string
+        totalAmount:
+          type: string
+        participantCount:
+          type: integer
+        splitType:
+          $ref: "#/components/schemas/SplitType"
+        customAmounts:
+          type: array
+          items:
+            type: string
+        txHash:
+          type: string
+        paidCount:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - creatorAddress
+        - onChainId
+        - totalAmount
+        - participantCount
+        - splitType
+        - txHash
+        - paidCount
+        - createdAt
+
+    SplitDetail:
+      allOf:
+        - $ref: "#/components/schemas/Split"
+        - type: object
+          properties:
+            payments:
+              type: array
+              items:
+                $ref: "#/components/schemas/Payment"
+          required: [payments]
+
+    RecordPaymentRequest:
+      type: object
+      properties:
+        payerAddress:
+          type: string
+        amount:
+          type: string
+          description: microUSDC string
+        txHash:
+          type: string
+      required: [payerAddress, amount, txHash]
+
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+        splitId:
+          type: string
+        payerAddress:
+          type: string
+        amount:
+          type: string
+        txHash:
+          type: string
+        paidAt:
+          type: string
+          format: date-time
+      required: [id, splitId, payerAddress, amount, txHash, paidAt]
+
+    Stats:
+      type: object
+      properties:
+        totalSplits:
+          type: integer
+        totalVolume:
+          type: string
+          description: microUSDC sum of all paid amounts
+        totalParticipantsPaid:
+          type: integer
+        activeSplits:
+          type: integer
+      required: [totalSplits, totalVolume, totalParticipantsPaid, activeSplits]
+
+    AppConfig:
+      type: object
+      properties:
+        chainId:
+          type: integer
+        chainName:
+          type: string
+        rpcUrl:
+          type: string
+        explorerUrl:
+          type: string
+        usdcAddress:
+          type: string
+        splitPayAddress:
+          type: string
+      required:
+        - chainId
+        - chainName
+        - rpcUrl
+        - explorerUrl
+        - usdcAddress
+        - splitPayAddress
