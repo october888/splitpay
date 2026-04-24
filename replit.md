@@ -39,6 +39,18 @@ decimals, explorer URL) is sourced from the official Circle **Arc App Kit**
 - USDC is the native gas token (18 decimals on the chain) and a standard
   ERC-20 with **6 decimals** at `0x36...000`. SplitPay charges in microUSDC.
 
+### Deployed contract
+
+- **Network**: Arc Testnet (chain id `5042002`)
+- **SplitPay address**: `0x6FF4eE58AdF20E8242Af657c871d1eD185E38277`
+- **Deployer**: `0xA133F5d357602f485835229C2bB8ECF536575c33`
+- **Explorer**: https://testnet.arcscan.app/address/0x6FF4eE58AdF20E8242Af657c871d1eD185E38277
+
+The contract address is wired into the app via the `SPLITPAY_CONTRACT_ADDRESS`
+shared env var; the deployer key lives in the `DEPLOYER_PRIVATE_KEY` Replit
+secret. To redeploy, run
+`USDC_ADDRESS=0x36...000 pnpm --dir contracts/hardhat run deploy:arc-testnet`.
+
 ## Deployment
 
 The full step-by-step guide lives in [`DEPLOY.md`](./DEPLOY.md). Short version:
