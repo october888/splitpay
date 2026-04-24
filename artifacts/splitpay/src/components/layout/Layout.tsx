@@ -40,7 +40,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <footer className="py-8 border-t border-white/5 bg-background/50">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
             <span>Connected to {cfg.chainName}</span>
           </div>
           <div className="flex items-center gap-4">

@@ -28,10 +28,10 @@ export default function Home() {
             </div>
             <h1 className="text-5xl md:text-7xl font-bold tracking-tight mb-6 leading-tight">
               Split bills instantly <br className="hidden md:block" />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-emerald-400">with one link.</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-fuchsia-400">with one link.</span>
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto">
-              The on-chain Venmo. Create a split, share the link, and let your friends pay their share in USDC. No sign-ups, no fees, no hassle.
+              Bills, group dinners, trips — settle them on-chain in seconds. Create a split, share the link, and let your friends pay their share in USDC. No sign-ups, no fees, no hassle.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <Link href="/create">
