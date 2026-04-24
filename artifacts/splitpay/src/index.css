@@ -127,3 +127,7 @@
     @apply font-sans antialiased bg-background text-foreground;
   }
 }
+
+#__replco {
+  display: none !important;
+}
