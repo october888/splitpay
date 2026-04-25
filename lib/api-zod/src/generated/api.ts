@@ -69,6 +69,10 @@ export const CreateSplitBody = zod.object({
     .array(zod.string())
     .optional()
     .describe("Per-participant amounts (microUSDC) for custom splits"),
+  participantNames: zod
+    .array(zod.string())
+    .optional()
+    .describe("Optional display names for each participant"),
   txHash: zod.string(),
 });
 

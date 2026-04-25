@@ -6,8 +6,9 @@ import {
   participantTokensTable,
   type Split as SplitRow,
   type Payment as PaymentRow,
+  type ParticipantToken as ParticipantTokenRow,
 } from "@workspace/db";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import {
   CreateSplitBody,
   ListRecentSplitsQueryParams,
@@ -35,6 +36,16 @@ function generateParticipantToken(): string {
   return token;
 }
 
+type ParticipantSlot = {
+  index: number;
+  token: string;
+  name?: string;
+  amount: string;
+  paid: boolean;
+  payerAddress?: string;
+  paidAt?: string;
+};
+
 type SplitDto = {
   id: string;
   title?: string;
@@ -47,7 +58,7 @@ type SplitDto = {
   txHash: string;
   paidCount: number;
   createdAt: string;
-  participantTokens?: string[];
+  participants?: ParticipantSlot[];
 };
 
 type PaymentDto = {
@@ -69,6 +80,9 @@ type ParticipantViewDto = {
   txHash: string;
   participantIndex: number;
   participantAmount: string;
+  participantName?: string;
+  hasPaid: boolean;
+  payerAddress?: string;
 };
 
 function toPaymentDto(row: PaymentRow): PaymentDto {
@@ -82,7 +96,23 @@ function toPaymentDto(row: PaymentRow): PaymentDto {
   };
 }
 
-function toSplitDto(row: SplitRow, paidCount: number, tokens?: string[]): SplitDto {
+function toParticipantSlot(row: ParticipantTokenRow): ParticipantSlot {
+  return {
+    index: row.participantIndex,
+    token: row.token,
+    name: row.participantName ?? undefined,
+    amount: row.participantAmount,
+    paid: !!row.payerAddress,
+    payerAddress: row.payerAddress ?? undefined,
+    paidAt: row.paidAt?.toISOString() ?? undefined,
+  };
+}
+
+function toSplitDto(
+  row: SplitRow,
+  paidCount: number,
+  participants?: ParticipantSlot[],
+): SplitDto {
   return {
     id: row.id,
     title: row.title ?? undefined,
@@ -95,7 +125,7 @@ function toSplitDto(row: SplitRow, paidCount: number, tokens?: string[]): SplitD
     txHash: row.txHash,
     paidCount,
     createdAt: row.createdAt.toISOString(),
-    ...(tokens ? { participantTokens: tokens } : {}),
+    ...(participants ? { participants } : {}),
   };
 }
 
@@ -128,7 +158,7 @@ router.get("/splits", async (req, res) => {
           c: sql<number>`count(*)::int`,
         })
         .from(paymentsTable)
-        .where(sql`${paymentsTable.splitId} = ANY(${ids})`)
+        .where(inArray(paymentsTable.splitId, ids))
         .groupBy(paymentsTable.splitId)
     : [];
   const countMap = new Map(counts.map((r) => [r.splitId, r.c]));
@@ -167,24 +197,27 @@ router.post("/splits", async (req, res) => {
       ? (BigInt(split.totalAmount) / BigInt(split.participantCount)).toString()
       : null;
 
-  const tokens: string[] = [];
+  const slots: ParticipantSlot[] = [];
   for (let i = 0; i < split.participantCount; i++) {
     const token = generateParticipantToken();
     const amount =
       split.splitType === "custom" && split.customAmounts
         ? (split.customAmounts[i] ?? perPerson ?? "0")
         : perPerson ?? "0";
+    const name = body.participantNames?.[i] || undefined;
 
     await db.insert(participantTokensTable).values({
       token,
       splitId: split.id,
       participantIndex: i,
       participantAmount: amount,
+      participantName: name ?? null,
     });
-    tokens.push(token);
+
+    slots.push({ index: i, token, name, amount, paid: false });
   }
 
-  res.status(201).json(toSplitDto(split, 0, tokens));
+  res.status(201).json(toSplitDto(split, 0, slots));
 });
 
 router.get("/splits/by-creator/:address", async (req, res) => {
@@ -203,7 +236,7 @@ router.get("/splits/by-creator/:address", async (req, res) => {
           c: sql<number>`count(*)::int`,
         })
         .from(paymentsTable)
-        .where(sql`${paymentsTable.splitId} = ANY(${ids})`)
+        .where(inArray(paymentsTable.splitId, ids))
         .groupBy(paymentsTable.splitId)
     : [];
   const countMap = new Map(counts.map((r) => [r.splitId, r.c]));
@@ -242,6 +275,9 @@ router.get("/splits/by-token/:token", async (req, res) => {
     txHash: split.txHash,
     participantIndex: tokenRow.participantIndex,
     participantAmount: tokenRow.participantAmount,
+    participantName: tokenRow.participantName ?? undefined,
+    hasPaid: !!tokenRow.payerAddress,
+    payerAddress: tokenRow.payerAddress ?? undefined,
   };
 
   res.json(view);
@@ -267,10 +303,10 @@ router.get("/splits/:id", async (req, res) => {
     .where(eq(participantTokensTable.splitId, row.id))
     .orderBy(participantTokensTable.participantIndex);
 
-  const tokens = tokenRows.length ? tokenRows.map((t) => t.token) : undefined;
+  const participants = tokenRows.map(toParticipantSlot);
 
   res.json({
-    ...toSplitDto(row, payments.length, tokens),
+    ...toSplitDto(row, payments.length, participants),
     payments: payments.map(toPaymentDto),
   });
 });
@@ -300,6 +336,7 @@ router.post("/splits/:id/payments", async (req, res) => {
   }
 
   const payerAddress = body.payerAddress.toLowerCase();
+  const token = (body as any).token as string | undefined;
 
   const [existing] = await db
     .select()
@@ -325,6 +362,37 @@ router.post("/splits/:id/payments", async (req, res) => {
       txHash: body.txHash,
     })
     .returning();
+
+  if (token) {
+    await db
+      .update(participantTokensTable)
+      .set({ payerAddress, paidAt: new Date() })
+      .where(
+        and(
+          eq(participantTokensTable.token, token),
+          eq(participantTokensTable.splitId, split.id),
+        ),
+      );
+  } else {
+    const [unclaimedToken] = await db
+      .select()
+      .from(participantTokensTable)
+      .where(
+        and(
+          eq(participantTokensTable.splitId, split.id),
+          sql`${participantTokensTable.payerAddress} IS NULL`,
+        ),
+      )
+      .orderBy(participantTokensTable.participantIndex)
+      .limit(1);
+
+    if (unclaimedToken) {
+      await db
+        .update(participantTokensTable)
+        .set({ payerAddress, paidAt: new Date() })
+        .where(eq(participantTokensTable.token, unclaimedToken.token));
+    }
+  }
 
   res.status(201).json(toPaymentDto(pmtInserted!));
 });

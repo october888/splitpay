@@ -62,6 +62,9 @@ export const participantTokensTable = pgTable(
       .references(() => splitsTable.id, { onDelete: "cascade" }),
     participantIndex: integer("participant_index").notNull(),
     participantAmount: text("participant_amount").notNull(),
+    participantName: text("participant_name"),
+    payerAddress: text("payer_address"),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
   },
   (t) => ({
     splitIdx: index("participant_tokens_split_id_idx").on(t.splitId),
