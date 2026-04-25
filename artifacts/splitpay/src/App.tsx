@@ -5,12 +5,17 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Web3Provider } from "@/lib/web3";
 import { Layout } from "@/components/layout/Layout";
 import NotFound from "@/pages/not-found";
-
+import { setBaseUrl } from "@workspace/api-client-react";
 import Home from "@/pages/Home";
 import CreateSplit from "@/pages/CreateSplit";
 import SplitDetail from "@/pages/SplitDetail";
 import MySplits from "@/pages/MySplits";
 import ParticipantPay from "@/pages/ParticipantPay";
+
+const apiUrl = import.meta.env.VITE_API_URL;
+if (apiUrl) {
+  setBaseUrl(apiUrl);
+}
 
 const queryClient = new QueryClient();
 
