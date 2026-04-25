@@ -6,13 +6,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { useAccount, ConnectButton, formatUsdcDisplay, shortAddress } from "@/lib/web3";
-import { useListSplitsByCreator } from "@workspace/api-client-react";
+import { useListSplitsByCreator, getListSplitsByCreatorQueryKey } from "@workspace/api-client-react";
 
 export default function MySplits() {
   const { address, isConnected } = useAccount();
   
   const { data: splits, isLoading } = useListSplitsByCreator(address || "", {
     query: {
+      queryKey: getListSplitsByCreatorQueryKey(address || ""),
       enabled: !!address && isConnected,
     }
   });

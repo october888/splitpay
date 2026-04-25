@@ -72,7 +72,7 @@ export const CreateSplitBody = zod.object({
   participantNames: zod
     .array(zod.string())
     .optional()
-    .describe("Optional display names for each participant"),
+    .describe("Optional display names for each participant slot"),
   txHash: zod.string(),
 });
 

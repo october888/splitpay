@@ -232,6 +232,11 @@ components:
           description: Per-participant amounts (microUSDC) for custom splits
           items:
             type: string
+        participantNames:
+          type: array
+          description: Optional display names for each participant slot
+          items:
+            type: string
         txHash:
           type: string
       required:

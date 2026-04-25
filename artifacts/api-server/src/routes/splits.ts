@@ -163,7 +163,7 @@ router.get("/splits", async (req, res) => {
     : [];
   const countMap = new Map(counts.map((r) => [r.splitId, r.c]));
 
-  res.json(splits.map((s) => toSplitDto(s, countMap.get(s.id) ?? 0)));
+  return res.json(splits.map((s) => toSplitDto(s, countMap.get(s.id) ?? 0)));
 });
 
 router.post("/splits", async (req, res) => {
@@ -217,7 +217,7 @@ router.post("/splits", async (req, res) => {
     slots.push({ index: i, token, name, amount, paid: false });
   }
 
-  res.status(201).json(toSplitDto(split, 0, slots));
+  return res.status(201).json(toSplitDto(split, 0, slots));
 });
 
 router.get("/splits/by-creator/:address", async (req, res) => {
@@ -280,7 +280,7 @@ router.get("/splits/by-token/:token", async (req, res) => {
     payerAddress: tokenRow.payerAddress ?? undefined,
   };
 
-  res.json(view);
+  return res.json(view);
 });
 
 router.get("/splits/:id", async (req, res) => {
@@ -305,7 +305,7 @@ router.get("/splits/:id", async (req, res) => {
 
   const participants = tokenRows.map(toParticipantSlot);
 
-  res.json({
+  return res.json({
     ...toSplitDto(row, payments.length, participants),
     payments: payments.map(toPaymentDto),
   });
@@ -394,7 +394,7 @@ router.post("/splits/:id/payments", async (req, res) => {
     }
   }
 
-  res.status(201).json(toPaymentDto(pmtInserted!));
+  return res.status(201).json(toPaymentDto(pmtInserted!));
 });
 
 export default router;

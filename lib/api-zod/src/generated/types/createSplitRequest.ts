@@ -24,5 +24,7 @@ export interface CreateSplitRequest {
   splitType: SplitType;
   /** Per-participant amounts (microUSDC) for custom splits */
   customAmounts?: string[];
+  /** Optional display names for each participant slot */
+  participantNames?: string[];
   txHash: string;
 }

@@ -67,7 +67,7 @@ export default function ParticipantPay() {
   const { data: shareAmount } = useShareAmount(onChainId, address);
   const { data: hasPaidOnChain, refetch: refetchHasPaid } = useHasPaid(onChainId, address);
   const { pay, isPending: isPaying } = usePayShare(onChainId);
-  const recordPayment = useRecordPayment(view?.splitId || "");
+  const recordPayment = useRecordPayment();
 
   const isPaid = view?.hasPaid || hasPaidOnChain;
 

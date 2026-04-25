@@ -57,7 +57,7 @@ export default function SplitDetail() {
   const { data: hasPaid, refetch: refetchHasPaid } = useHasPaid(onChainId, address);
 
   const { pay, isPending: isPaying } = usePayShare(onChainId);
-  const recordPayment = useRecordPayment(id || "");
+  const recordPayment = useRecordPayment();
 
   const [customPayAmount, setCustomPayAmount] = useState("");
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
