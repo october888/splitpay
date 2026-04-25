@@ -4,4 +4,4 @@ export * from "./units";
 export * from "./useAppConfig";
 export * from "./useSplitPay";
 export { Web3Provider } from "./Web3Provider";
-export { ConnectButton } from "@rainbow-me/rainbowkit";
+export { ConnectButton } from "./ConnectButton";
